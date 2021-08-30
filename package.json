@@ -1,0 +1,34 @@
+{
+  "name": "big-wave",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll"
+  },
+  "licenses": [],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/jest": "^27.0.1",
+    "@types/lodash": "^4.14.172",
+    "@types/node": "^16.7.4",
+    "@types/p-limit": "^2.2.0",
+    "@types/uuid": "^8.3.1",
+    "jest": "^27.1.0",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.2"
+  },
+  "dependencies": {
+    "aws4-axios": "^2.4.3",
+    "axios": "^0.21.1",
+    "lodash": "^4.17.21",
+    "p-limit": "^3.0.0",
+    "p-throttle": "^4.1.1",
+    "uuid": "^8.3.2"
+  }
+}
