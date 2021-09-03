@@ -1,21 +1,20 @@
-import axios from 'axios';
-import _ from 'lodash';
-import { promises as fs } from 'fs';
-import { genRandomStr } from './util';
-import path from 'path';
+import axios from "axios";
+import _ from "lodash";
+import { promises as fs } from "fs";
+import { genRandomStr } from "./util";
+import path from "path";
 
-declare module 'axios' {
+declare module "axios" {
   export interface AxiosRequestConfig {
     requestId?: string;
     timestamp?: number;
     node?: number;
-  }
-  export interface AxiosResponse {
     responseTime?: number;
   }
 }
 
 export type TestResult = {
+  clientId?: string;
   status?: number;
   url?: string;
   method?: string;
@@ -26,6 +25,7 @@ export type TestResult = {
 };
 
 export class BigWaveCore {
+  constructor(private clientId?: string) {}
   public summary: TestResult[] = [];
 
   public create = (node: number) => {
@@ -36,21 +36,17 @@ export class BigWaveCore {
       config.timestamp = Date.now();
       return config;
     });
-    // response time
-    client.interceptors.response.use((response) => {
-      response.responseTime = Date.now() - response.config.timestamp!;
-      return response;
-    });
 
-    // test summary
+    // response time, and test summary
     client.interceptors.response.use(
       (response) => {
         this.summary.push({
+          clientId: this.clientId,
           status: response.status,
           url: response.config.url,
           method: response.config.method,
           sentAt: response.config.timestamp!,
-          responseTime: response.responseTime!,
+          responseTime: Date.now() - response.config.timestamp!,
           node: response.config.node!,
         } as any);
         return response;
@@ -58,16 +54,17 @@ export class BigWaveCore {
       (error) => {
         if (axios.isAxiosError(error)) {
           this.summary.push({
+            clientId: this.clientId,
             status: error?.response?.status,
-            url: error?.response?.config.url,
-            method: error?.response?.config.method,
+            url: error?.config.url,
+            method: error?.config.method,
             sentAt: error.config.timestamp!,
-            responseTime: error?.response?.responseTime!,
+            responseTime: Date.now() - error.config.timestamp!,
             node: error.config.node!,
-            error: error,
+            error: error.message,
           });
         }
-      },
+      }
     );
 
     return client;
@@ -76,13 +73,13 @@ export class BigWaveCore {
   public report = async () => {
     const runId = genRandomStr();
     const now = new Date().toISOString();
-    const data = JSON.stringify(_.sortBy(this.summary, ['responseTime']), null, 2);
+    const data = JSON.stringify(_.sortBy(this.summary, ["responseTime"]), null, 2);
     const filename = `result-${now}-${runId}.json`;
-    const filepath = path.resolve(__dirname, '../');
+    const filepath = path.resolve(__dirname, "../");
     console.log(`Writing report on file: ${filepath}/${filename}`);
     // TODO: use json-stream-stringify or alternative
     // see https://github.com/Faleij/json-stream-stringify
     // or https://stackoverflow.com/questions/65385002/create-big-json-object-js
-    await fs.writeFile(filename, data, { encoding: 'utf8' });
+    await fs.writeFile(filename, data, { encoding: "utf8" });
   };
 }

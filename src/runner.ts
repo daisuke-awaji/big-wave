@@ -1,8 +1,9 @@
-import cliProgress, { SingleBar } from 'cli-progress';
-import { AxiosInstance } from 'axios';
-import { BigWaveCore, TestResult } from './core';
-import pThrottle from 'p-throttle';
-import * as _ from 'lodash';
+import cliProgress, { SingleBar } from "cli-progress";
+import { AxiosInstance } from "axios";
+import { BigWaveCore, TestResult } from "./core";
+import pThrottle from "p-throttle";
+import * as _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
 type Scenario = (client: AxiosInstance) => Promise<void>;
 type RunOption = {
@@ -14,26 +15,25 @@ type RunOption = {
 const MAX_CONCURRENCY_PER_WORKER = 100;
 
 export const run = async (scenario: Scenario, opt?: RunOption) => {
-  const concurrency = opt?.concurrency ?? 0; // 同時実行数
-  const interval = opt?.interval ?? 0; // シナリオの実行間隔(ms)
-  const node = opt?.node ?? 1; // シナリオ配列
+  const concurrency = opt?.concurrency ?? 0; // run scenario concurrency
+  const interval = opt?.interval ?? 0; // run scenario interval (ms)
+  const node = opt?.node ?? 1; // scenario count
 
   const progress = new cliProgress.SingleBar(
     {
-      format: 'Progress {bar} | {percentage}% || {value}/{total} Scenarios || Duration {duration}s',
-      barCompleteChar: '\u2588',
-      barIncompleteChar: '\u2591',
+      format: "Progress {bar} | {percentage}% || {value}/{total} Workers || Duration {duration}s",
+      barCompleteChar: "\u2588",
+      barIncompleteChar: "\u2591",
       hideCursor: false,
     },
-    cliProgress.Presets.shades_classic,
+    cliProgress.Presets.shades_classic
   );
 
   const workerCount = Math.floor(concurrency / MAX_CONCURRENCY_PER_WORKER) + 1;
   const chunkedNodes = _.chunk(
     [...new Array(node)].map((_, i) => i),
-    Math.floor(node / workerCount),
+    Math.floor(node / workerCount)
   );
-  console.log(chunkedNodes);
 
   progress.start(chunkedNodes.length, 0);
 
@@ -47,8 +47,8 @@ export const run = async (scenario: Scenario, opt?: RunOption) => {
   });
 
   const result = await Promise.allSettled(runWorkerPromises);
-  let allValues = result
-    .filter((c) => c.status === 'fulfilled')
+  const allValues = result
+    .filter((c) => c.status === "fulfilled")
     .map((c) => <PromiseFulfilledResult<TestResult[]>>c)
     .map((c) => c.value)
     .flat();
@@ -58,23 +58,7 @@ export const run = async (scenario: Scenario, opt?: RunOption) => {
   //   .map((c) => c.reason);
 
   progress.stop();
-  console.table(allValues);
-  // console.log(result.map((d) => d.status));
-
-  // TODO: Distribute Computing on AWS Lambda
-  // const bw = new BigWaveCore();
-  // const throttle = pThrottle({ limit: concurrency, interval });
-  // const throttled = throttle(async (index: number) => {
-  //   progress.increment();
-  //   return scenario(bw.create(index));
-  // });
-  // await Promise.allSettled([...new Array(node)].map((_, i) => throttled(i)));
-  // progress.stop();
-  // console.log('...json stringify...');
-
-  // console.log(JSON.stringify(result, null, 2));
-
-  // await bw.report();
+  console.table(_.sortBy(allValues, "node"));
 };
 
 type RunWorkerOption = {
@@ -82,8 +66,10 @@ type RunWorkerOption = {
   nodes: number[];
 };
 
+// TODO: Distribute Computing on AWS Lambda
 const runWorker = async (scenario: Scenario, opt: Required<RunWorkerOption>) => {
-  const bw = new BigWaveCore();
+  const id = uuidv4();
+  const bw = new BigWaveCore(id);
   const { interval, nodes } = opt;
   const throttle = pThrottle({ limit: MAX_CONCURRENCY_PER_WORKER, interval });
   const throttled = throttle(async (node: number) => {
