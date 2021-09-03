@@ -18,7 +18,11 @@ const main = async () => {
     });
   };
 
-  await run(scenario, { node: 10, concurrency: 100, interval: 1000 });
+  await run(scenario, {
+    node: 204,
+    concurrency: 205,
+    interval: 1000,
+  });
 };
 
 main();

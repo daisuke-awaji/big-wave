@@ -15,7 +15,7 @@ declare module 'axios' {
   }
 }
 
-type TestResult = {
+export type TestResult = {
   status?: number;
   url?: string;
   method?: string;
