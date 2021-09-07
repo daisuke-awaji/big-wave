@@ -1,9 +1,17 @@
 WIP....
 
 <p align="center">
-  <img src="./assets/wave.png" width="150" alt="Chaos Mock Service Worker logo" />
+  <img src="./assets/wave.png" width="150" />
 </p>
 <p align="center">BigWave is simple, easy, load testing tool.</p>
+
+## Architecture
+
+Generate load script on your machine, then run worker nodes in AWS Lambda.
+
+<p align="center">
+  <img src="./assets/bigwave-architecture.png" />
+</p>
 
 ## Install
 
