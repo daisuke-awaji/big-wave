@@ -1,0 +1,14 @@
+phase:
+  - concurrency: 10
+    interval: 10
+    node: 10
+  - concurrency: 20
+    interval: 10
+    node: 20
+scenarios:
+  - url: 'https://test.k6.io/'
+    method: 'get'
+  - url: 'https://test.k6.io/contacts.php'
+    method: 'get'
+  - url: 'https://test.k6.io/news.php'
+    method: 'get'

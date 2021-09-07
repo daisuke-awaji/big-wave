@@ -1,0 +1,18 @@
+service: big-wave-serverless
+
+frameworkVersion: '2'
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  lambdaHashingVersion: 20201221
+
+functions:
+  worker:
+    handler: src/functions/worker.main
+    memorySize: 256
